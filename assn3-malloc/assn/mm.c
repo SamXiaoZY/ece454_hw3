@@ -142,8 +142,8 @@ void insert_free_block(void *bp)
     size_t asize = GET_SIZE_FROM_BLK(bp);
     size_t index = get_flist_index(asize);
 
-    printf("Insert free block size = %zu at index = %zu\n", asize / WSIZE, index);
-    fflush(stdout);
+    //printf("Insert free block size = %zu at index = %zu\n", asize / WSIZE, index);
+    //fflush(stdout);
 
     void *first_block = flist[index];
 
@@ -172,8 +172,8 @@ void insert_free_block(void *bp)
 void remove_free_block(void *bp)
 {
     size_t asize = GET_SIZE_FROM_BLK(bp);
-    printf("Remove free block size = %zu\n", asize / WSIZE);
-    fflush(stdout);
+    //printf("Remove free block size = %zu\n", asize / WSIZE);
+    //fflush(stdout);
 
     void *prev = GET_PREV_FBLOCK(bp);
     void *next = GET_NEXT_FBLOCK(bp);
@@ -209,7 +209,7 @@ void *find_block(size_t index, size_t asize)
     while (bp != NULL) {
         block_size = GET_SIZE_FROM_BLK(bp);
         if (block_size >= asize) {
-            printf("Found fit free block size = %zu at index = %zu\n", block_size / WSIZE, index);
+            //printf("Found fit free block size = %zu at index = %zu\n", block_size / WSIZE, index);
             bp = handle_split_block(bp, asize);
             break;
         }
@@ -239,12 +239,12 @@ void *handle_split_block(void *bp, size_t asize)
 
     /* Do not split if block size is not large enough */
     if (block_size < asize + MIN_BLOCK_SIZE) {
-        printf("No need to split\n");
+        //printf("No need to split\n");
         return bp;
     }
 
-    printf("Splitting %zu into %zu and %zu\n", block_size / WSIZE, asize / WSIZE, sub_size / WSIZE);
-    fflush(stdout);
+    //printf("Splitting %zu into %zu and %zu\n", block_size / WSIZE, asize / WSIZE, sub_size / WSIZE);
+    //fflush(stdout);
 
     /* Change size in header and footer of bp */
     /* Note that the order cannot be changed here, since all subsequence operations depends on the header */
@@ -311,14 +311,13 @@ void *coalesce(void *bp)
         return bp;
     }
 
-    printf("Coalescing\n");
-
     if (prev_alloc && next_alloc) {       /* Case 1 */
         new_block = bp;
     }
 
     else if (prev_alloc && !next_alloc) { /* Case 2 */
         /* Need to remove from free list because it is been coalesced */
+        //printf("Coalescing\n");
         remove_free_block(next);
         size += GET_SIZE(HDRP(next));
         PUT(HDRP(bp), PACK(size, 0));
@@ -328,6 +327,7 @@ void *coalesce(void *bp)
 
     else if (!prev_alloc && next_alloc) { /* Case 3 */
         /* Need to remove prev from free list because the size is changed */
+        //printf("Coalescing\n");
         remove_free_block(prev);
         size += GET_SIZE(HDRP(prev));
         PUT(FTRP(bp), PACK(size, 0));
@@ -336,6 +336,7 @@ void *coalesce(void *bp)
     }
 
     else {            /* Case 4 */
+        //printf("Coalescing\n");
         remove_free_block(prev);
         remove_free_block(next);
         size += GET_SIZE(HDRP(prev)) + GET_SIZE(FTRP(next))  ;
@@ -363,7 +364,7 @@ void *extend_heap(size_t words)
     if ( (bp = mem_sbrk(size)) == (void *)-1 )
         return NULL;
 
-    printf("Extend heap size = %zu\n", size / WSIZE);
+    //printf("Extend heap size = %zu\n", size / WSIZE);
 
     /* Initialize free block header/footer and the epilogue header */
     PUT(HDRP(bp), PACK(size, 0));                // free block header
@@ -386,7 +387,7 @@ void *extend_heap(size_t words)
  **********************************************************/
 void *find_fit(size_t asize)
 {
-    fflush(stdout);
+    //fflush(stdout);
     void *bp = NULL;
     size_t index;
 
@@ -428,16 +429,16 @@ void mm_free(void *bp)
     /* Clear allocated bit in header and footer, and coalesce freed block */
     size_t size = GET_SIZE(HDRP(bp));
 
-    printf("Free size = %zu\n", size / WSIZE);
-    fflush(stdout);
+    //printf("Free size = %zu\n", size / WSIZE);
+    //fflush(stdout);
 
     PUT(HDRP(bp), PACK(size,0));
     PUT(FTRP(bp), PACK(size,0));
     coalesce(bp);
 
-    print_flist();
-    printf("********************\n");
-    fflush(stdout);
+    //print_flist();
+    //printf("********************\n");
+    //fflush(stdout);
 }
 
 
@@ -469,24 +470,24 @@ void *mm_malloc(size_t size)
     else
         asize = DSIZE * ((size + (DSIZE) + (DSIZE-1))/ DSIZE);
 
-    printf("Malloc size = %zu\n", asize / WSIZE);
-    fflush(stdout);
-    print_flist();
+    //printf("Malloc size = %zu\n", asize / WSIZE);
+    //fflush(stdout);
+    //print_flist();
 
     /* Search the free list for a fit */
     if ((bp = find_fit(asize)) != NULL) {
         place(bp, asize);
 
-        printf("********************\n");
-        fflush(stdout);
-        print_flist();
+        //printf("********************\n");
+        //fflush(stdout);
+        //print_flist();
 
         return bp;
     }
 
     /* No fit found. Get more memory and place the block */
-    printf("No free block, extending heap\n");
-    fflush(stdout);
+    //printf("No free block, extending heap\n");
+    //fflush(stdout);
     
     extendsize = get_extend_size(asize);
 
@@ -502,10 +503,11 @@ void *mm_malloc(size_t size)
     
     place(bp, asize);
 
-    printf("bp size = %zu\n", block_size / WSIZE);
-    printf("********************\n");
-    fflush(stdout);
-    print_flist();
+    //printf("bp size = %zu\n", block_size / WSIZE);
+    //printf("********************\n");
+    
+    //print_flist();
+    //fflush(stdout);
 
     return bp;
 }
@@ -536,62 +538,47 @@ size_t get_extend_size(size_t asize)
  *********************************************************/
 void *mm_realloc(void *ptr, size_t size)
 {
-    printf("Realloc\n");
-    fflush(stdout);
     /* If size == 0 then this is just free, and we return NULL. */
     if(size == 0){
-      mm_free(ptr);
-      return NULL;
+        mm_free(ptr);
+        return NULL;
     }
     /* If oldptr is NULL, then this is just malloc. */
     if (ptr == NULL)
-      return (mm_malloc(size));
+        return (mm_malloc(size));
 
+    size_t old_block_size = GET_SIZE(HDRP(ptr));
+    size_t asize;
+
+    /* Compute the adjusted block size */
+    if (size <= DSIZE) {
+        asize = 2 * DSIZE;
+    } else {
+        asize = DSIZE * ((size + (DSIZE) + (DSIZE-1))/ DSIZE);
+    }
+
+    /* If the old block size is enough, return the original block pointer */
+    if (old_block_size >= asize) {
+        return ptr;
+    }
+
+    /* The old block size is not large enough */
     void *oldptr = ptr;
-
-    /* Keep copies of the first 2 words since they will be overwritten after freeing */
-    void *first_word = GET_PREV_FBLOCK(oldptr);
-    void *second_word = GET_NEXT_FBLOCK(oldptr);
-    size_t copySize = GET_SIZE(HDRP(oldptr));
+    void *newptr;
 
 
-    size_t tmp;
-    printf("Oldptr address before free = %p\n", oldptr);
-    int i;
-    for (i = 0 ; i < copySize / WSIZE - 2; i++) {
-        tmp = GET(((char*)oldptr)+i*WSIZE);
-        printf("%zu, ", tmp);
-    }
-    printf("\n");
-
-    mm_free(oldptr);
-
-
-    split_flag = 0;
-    void *newptr = mm_malloc((size_t)(size * 1.5));
-    split_flag = 1;
-
-    printf("Oldptr address after malloc = %p\n", oldptr);
-    for (i = 0 ; i < copySize / WSIZE - 2; i++) {
-        tmp = GET(((char*)oldptr)+i*WSIZE);
-        printf("%zu, ", tmp);
-    }
-    printf("\n");
-
-
+    newptr = mm_malloc((size_t)(size * 1.5));
     if (newptr == NULL)
-      return NULL;
+        return NULL;
 
     /* Copy the old data. */
-    if (size < copySize)
-      copySize = size;
-    memcpy(newptr, oldptr, copySize);
-    PUT_PREV_FBLOCK(newptr, first_word);
-    PUT_NEXT_FBLOCK(newptr, second_word);
-    
+    old_block_size = GET_SIZE(HDRP(oldptr));
+    if (size < old_block_size)
+        old_block_size = size;
+    memcpy(newptr, oldptr, old_block_size);
+    mm_free(oldptr);
     return newptr;
 }
-
 /**********************************************************
  * mm_check
  * Check the consistency of the memory heap
