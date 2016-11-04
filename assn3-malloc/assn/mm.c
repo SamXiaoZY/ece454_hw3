@@ -628,7 +628,7 @@ int mm_check(void)
   
 
 	//find all free blocks in the heap and check if there are in the free list
-     while(block != NULL){
+     while(block != NULL && block < heapend){
           int isfree = GET_ALLOC(HDRP(block));
           if (isfree == 0){
                int result = search_free_list_helper(block);
