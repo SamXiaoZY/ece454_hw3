@@ -53,6 +53,7 @@ void *handle_split_block(void *bp, size_t asize);
 size_t get_extend_size(size_t asize);
 int mm_check(void);
 void print_flist(void);
+int search_free_list_helper(void *bp);
 
 /*********************************************************
  * NOTE TO STUDENTS: Before you do anything else, please
@@ -636,7 +637,7 @@ int mm_check(void)
                }     
           }
           void *nextblock = NEXT_BLKP(block);
-          block = nextblock
+          block = nextblock;
      }
   return 1;
 }
