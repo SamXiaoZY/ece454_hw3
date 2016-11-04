@@ -615,7 +615,7 @@ int mm_check(void)
                void *prevblock = PREV_BLKP(currentbp);
                int isprevfree = GET_ALLOC(HDRP(prevblock));
                int isnextfree = GET_ALLOC(HDRP(nextblock));
-               if (isprevfree ==0){
+               if (isprevfree == 0){
                     printf("The block %p need coalescing in free list", prevblock);
                }
                if (isnextfree == 0){
@@ -632,7 +632,7 @@ int mm_check(void)
           int isfree = GET_ALLOC(HDRP(block));
           if (isfree == 0){
                int result = search_free_list_helper(block);
-               if (result=0){
+               if (result == 0){
                     printf("The free block %p is not in the free list", block);
                }     
           }
