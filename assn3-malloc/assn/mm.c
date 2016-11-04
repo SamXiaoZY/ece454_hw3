@@ -560,7 +560,49 @@ void *mm_realloc(void *ptr, size_t size)
  *********************************************************/
 int mm_check(void)
 {
-    //check are there any contiguous free blocks that somehow escaped coalescing
+	     int i;
+     int m;
+     int count;
+     void *heapstart = mem_heap_lo();
+     void *heapend = mem_heap_hi();
+     
+     //check if the pointers in the free list point to valid free blocks
+     //such as: 
+     //1.if the block is marked as free
+     //2.if the address is in the heap
+     //3.if the footer and header of the blocks matches with each other.
+     
+     for (i = 0; i < FREE_LIST_SIZE; i++){
+		 //starting from the first element in the free list
+          void *currentbp = flist[i];
+          
+          while (currentbp != NULL){
+               void *currentheader = HDRP(currentbp);
+               int isfree = GET_ALLOC(currentheader);
+               
+      //check if every block in the free list marked as free
+               if (isfree == 1){
+                    printf("The block %p is not free in the free list", currentbp);
+               }
+               
+     //Check if the pointers in the free list points to address in heap
+	//get the range of the heap
+               if(currentbp<heapstart || currentbp>heapend){
+                    printf("The free block %p is out of heap", currentbp);
+               }
+               
+     //check if the header=footer
+               if(*HDRP(currentbp)!= *FTRP(currentbp)){
+                    printf("The footer and header of %p does not match.", currentbp);
+               }
+               void *nextbp = GET_NEXT_FBLOCK(currentbp);
+               currentbp = nextbp;
+          }
+          
+     }
+     
+ 
+     //check are there any contiguous free blocks that somehow escaped coalescing
      
      for (i = 0; i < FREE_LIST_SIZE; i++){
 		 //starting from the first element in the free list
@@ -571,7 +613,7 @@ int mm_check(void)
                void *prevblock = PREV_BLKP(currentbp);
                int isprevfree = GET_ALLOC(HDRP(prevblock));
                int isnextfree = GET_ALLOC(HDRP(nextblock));
-               if (isprevblock ==0){
+               if (isprevfree ==0){
                     printf("The block %x need coalescing in free list", prevblock);
                }
                if (isnextfree == 0){
@@ -581,6 +623,7 @@ int mm_check(void)
                
           }
     }
+  
   return 1;
 }
 
