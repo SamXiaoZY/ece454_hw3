@@ -531,7 +531,7 @@ void *mm_realloc(void *ptr, size_t size)
     void *oldptr = ptr;
     void *newptr;
 
-    newptr = mm_malloc((size_t)(size * 2));
+    newptr = mm_malloc((size_t)(size * 1.5));
     if (newptr == NULL)
         return NULL;
 
