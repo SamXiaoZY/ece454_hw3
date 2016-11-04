@@ -127,7 +127,6 @@ size_t get_flist_index(size_t asize)
  * insert_free_block
  * Insert the free block to the start of the designated linked list 
  * in free block list
-
  **********************************************************/
 void insert_free_block(void *bp)
 {
@@ -539,128 +538,27 @@ void *mm_realloc(void *ptr, size_t size)
  *********************************************************/
 int mm_check(void)
 {
-     int i;
-     int m;
-     int count;
+    //check are there any contiguous free blocks that somehow escaped coalescing
      
-	 //check if every block in the free list marked as free
      for (i = 0; i < FREE_LIST_SIZE; i++){
 		 //starting from the first element in the free list
           void *currentbp = flist[i];
-          if (currentbp != NULL){
-          void *currentheader = HDRP(currentbp);
-          int isfree = GET_ALLOC(currentheader);
-          if (isfree == 1){
-               printf("the block %x is not free in the free list", currentbp);
-          }
-          void *nextbp = GET_NEXT_FBLOCK(currentbp);
-		  //sort the blocks linked to the first block to check if the block is freed 
-          while (nextbp != NULL){
-               currentbp = nextbp;
-               currentheader = HDRP(nextbp);
-               isfree = GET_ALLOC(currentheader);
-               if (isfree == 1){
-                    printf("The block %x is not free in the free list", currentbp);
+          while (currentbp!= NULL){
+               void *nextbp = GET_NEXT_FBLOCK(currentbp);
+               void *nextblock = NEXT_BLKP(currentbp);
+               void *prevblock = PREV_BLKP(currentbp);
+               int isprevfree = GET_ALLOC(HDRP(prevblock));
+               int isnextfree = GET_ALLOC(HDRP(nextblock));
+               if (isprevblock ==0){
+                    printf("The block %x need coalescing in free list", prevblock);
                }
-               nextbp = GET_NEXT_FBLOCK(currentbp);
-          }
-          }   
-     }
-     
-     
-     //check are there any contiguous free blocks that somehow escaped coalescing
-     
-     for (i = 0; i < FREE_LIST_SIZE; i++){
-		 //starting from the first element in the free list
-          void *currentbp = flist[i];
-          if (currentbp != NULL){
-			void *nextbp = GET_NEXT_FBLOCK(currentbp);
-			void *nextblock = NEXT_BLKP(currentbp);
-			int isfree = GET_ALLOC(HDRP(nextblock));
-			if (isfree == 0){
-               printf("The block %x need coalescing in free list", nextblock);
-			}
-          
-		//find all next blocks of the blocks in the free list, check if they are in the free list too
-          while (nextbp!= NULL){
-               currentbp = nextbp;
-               nextbp = GET_NEXT_FBLOCK(currentbp);
-               nextblock = NEXT_BLKP(currentbp);
-               int isfree = GET_ALLOC(HDRP(nextblock));
-               if (isfree == 0){
+               if (isnextfree == 0){
                     printf("The block %x need coalescing in free list", nextblock);
                }
+               currentbp = nextbp;
                
           }
     }
-           
-               
-          
-          
-          
-     }
-     
-     
-     //check if every free block is actually in the free list
-
-	 //get the head of the heap
-     void *heap = mem_heap_lo();
-
-	 //find the first block in the heap
-     void *firstblock = heap+4*WSIZE;
-     if (firstblock != NULL){
-          int isfree = GET_ALLOC(HDRP(firstblock));
-
-		  //if the block is free, use sort_free_list_helper to check if the block is in the free list
-          if (isfree == 0){
-               int result = sort_free_list_helper(firstblock);
-               if (result=0){
-                    printf("The free block %x is not in the free list", firstblock);
-               }
-          }
-     }
-     void *nextblock = NEXT_BLKP(firstblock);
-
-	 //loop over the whole heap to check if all free blocks are in the free list
-     while (nextblock != NULL){
-          void *currentblock = nextblock;
-          nextblock = NEXT_BLKP(currentblock);
-          int isfree = GET_ALLOC(HDRP(currentblock));
-          if (isfree == 0){
-               int result = sort_free_list_helper(firstblock); 
-               if (result=0){
-                    printf("The free block %x is not in the free list", currentblock);
-               }
-          }
-     
-     }
-     
-
-     //Check if the pointers in the free list points to address in heap
-	//get the range of the heap
-     void *heapstart = mem_heap_lo();
-     void *heapend = mem_heap_hi();
-
-	 //sort all free blocks in the free list, check if their address is in the range of heap area
-     for (i=0; i<FREE_LIST_SIZE; i++){
-          void *currentbp = flist[i];    
-          if (currentbp!= NULL){
-               if(currentbp<heapstart || currentbp>heapend){
-                    printf("The free block %x is out of heap", currentbp);
-               }
-               void *nextbp = GET_NEXT_FBLOCK(currentbp);
-               while (nextbp != NULL){
-                    currentbp = nextbp;
-                    nextbp = GET_NEXT_FBLOCK(currentbp);
-                    if(currentbp<heapstart || currentbp>heapend){
-                         printf("The free block %x is out of heap", currentbp);
-                    }
-                    
-               }
-               
-          }
-     }
-     
   return 1;
 }
 
