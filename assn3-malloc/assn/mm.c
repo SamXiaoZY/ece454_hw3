@@ -1,5 +1,36 @@
 /*
- * This implementation replicates implements a 
+ * This code implements a flexible segregated list memory
+ * management architecture including mm_malloc, mm_free 
+ * and mm_realloc.
+ * 
+ * A global list of free blocks is maintained with size 
+ * of FREE_LIST_SIZE. Each element in the free list is a 
+ * linked list containing free blocks with sizes ranging 
+ * from 2**(i+2) to 2**(i+3)-1 of words. Each time a 
+ * memory block is freed, the freed block will first be 
+ * coalesced with its previous and next block in the heap 
+ * and inserted at the head of the appropriate linked list 
+ * in the free list based on its block size.
+ * 
+ * When mm_malloc is called with a size, the program will 
+ * first search the free list to try to find a fitting 
+ * free block, if no free block is found, more memory in 
+ * the heap will be requested. mm_malloc uses find_fit
+ * to search a fitting block, if a fitting free block is 
+ * found, and the remaining size is enough to form another
+ * free block (> MIN_BLOCK_SIZE), the block will be split
+ * into two. The first part with request malloc size will
+ * be return return to caller and the second part will be
+ * added back to the free list.
+ * 
+ * When mm_realloc is called, a block pointer and a size 
+ * will be passed in. If the size is the less than the 
+ * original size of block pointer, no operation is needed
+ * and the block pointer will be returned back. If the 
+ * size is larger than the original block size, a new block
+ * of memory with larger size will be allocated with malloc
+ * and the old block pointer will be freed.
+ * 
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,14 +45,14 @@
 /*********************************************************
  * Function Prototypes
  ********************************************************/
-void *find_block(size_t index, size_t asize);
 size_t get_flist_index(size_t asize);
 void insert_free_block(void *bp);
 void remove_free_block(void *bp);
+void *find_block(size_t index, size_t asize);
 void *handle_split_block(void *bp, size_t asize);
-void print_flist(void);
 size_t get_extend_size(size_t asize);
 int mm_check(void);
+void print_flist(void);
 
 /*********************************************************
  * NOTE TO STUDENTS: Before you do anything else, please
@@ -90,6 +121,7 @@ team_t team = {
 
 #define FREE_LIST_SIZE 20
 
+/* The global free list */
 void *flist[FREE_LIST_SIZE];
 
 /**********************************************************
@@ -139,17 +171,13 @@ void insert_free_block(void *bp)
         /* If list is not empty, insert in front of the first block */
         PUT_PREV_FBLOCK(first_block, bp);
         PUT_NEXT_FBLOCK(bp, first_block);
-        //assert(GET_NEXT_FBLOCK(bp) != NULL);
     } else {
         /* If list is empty, set next block to be NULL to identify the last block */
         PUT_NEXT_FBLOCK(bp, NULL);
-        //assert(GET_NEXT_FBLOCK(bp) == NULL);
     }
     /* Set the previous block to NULL to identify the first block */
     PUT_PREV_FBLOCK(bp, NULL);
     flist[index] = bp;
-
-    //assert(GET_PREV_FBLOCK(bp) == NULL);
 }
 
 /**********************************************************
@@ -424,14 +452,11 @@ void mm_free(void *bp)
     coalesce(bp);
 }
 
-
 /**********************************************************
  * mm_malloc
  * Allocate a block of size bytes.
- * The type of search is determined by find_fit
- * The decision of splitting the block, or not is determined
- *   in place(..)
- * If no block satisfies the request, the heap is extended
+ * The type of search is determined by find_fit.
+ * If no block satisfies the request, the heap is extended.
  **********************************************************/
 void *mm_malloc(size_t size)
 {
@@ -505,16 +530,6 @@ void *mm_realloc(void *ptr, size_t size)
     /* The old block size is not large enough */
     void *oldptr = ptr;
     void *newptr;
-
-    /* Check if next block is free */
-    void *next = NEXT_BLKP(oldptr);
-    size_t new_size = GET_SIZE_FROM_BLK(next) + old_block_size;
-    if (!GET_ALLOC(HDRP(next)) && new_size >= asize) {
-        remove_free_block(next);
-        PUT(HDRP(oldptr), PACK(new_size, 1));
-        PUT(FTRP(oldptr), PACK(new_size, 1));
-        return oldptr;
-    }
 
     newptr = mm_malloc((size_t)(size * 2));
     if (newptr == NULL)
