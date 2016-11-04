@@ -560,6 +560,27 @@ void *mm_realloc(void *ptr, size_t size)
  *********************************************************/
 int mm_check(void)
 {
+    //check are there any contiguous free blocks that somehow escaped coalescing
+     
+     for (i = 0; i < FREE_LIST_SIZE; i++){
+		 //starting from the first element in the free list
+          void *currentbp = flist[i];
+          while (currentbp!= NULL){
+               void *nextbp = GET_NEXT_FBLOCK(currentbp);
+               void *nextblock = NEXT_BLKP(currentbp);
+               void *prevblock = PREV_BLKP(currentbp);
+               int isprevfree = GET_ALLOC(HDRP(prevblock));
+               int isnextfree = GET_ALLOC(HDRP(nextblock));
+               if (isprevblock ==0){
+                    printf("The block %x need coalescing in free list", prevblock);
+               }
+               if (isnextfree == 0){
+                    printf("The block %x need coalescing in free list", nextblock);
+               }
+               currentbp = nextbp;
+               
+          }
+    }
   return 1;
 }
 
